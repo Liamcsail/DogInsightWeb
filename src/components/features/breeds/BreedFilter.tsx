@@ -1,18 +1,18 @@
-import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, Filter as FilterIcon } from 'lucide-react'
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Filter as FilterIcon } from "lucide-react";
 
 interface BreedFilterProps {
-  searchTerm: string
-  onSearchChange: (value: string) => void
-  selectedCategory: string
-  onCategoryChange: (category: string) => void
-  selectedPersonality: string[]
-  onPersonalityChange: (personality: string) => void
-  categories: string[]
-  personalities: string[]
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (category: string) => void;
+  selectedPersonality: string[];
+  onPersonalityChange: (personality: string) => void;
+  categories: string[];
+  personalities: string[];
 }
 
 export function BreedFilter({
@@ -42,7 +42,7 @@ export function BreedFilter({
         </div>
         <div className="flex-1 flex items-center gap-2 overflow-x-auto pb-2">
           <FilterIcon className="text-gray-400 flex-shrink-0" />
-          {categories.map(category => (
+          {categories.map((category) => (
             <Button
               key={category}
               variant={selectedCategory === category ? "default" : "outline"}
@@ -56,10 +56,12 @@ export function BreedFilter({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {personalities.map(personality => (
+        {personalities.map((personality) => (
           <Badge
             key={personality}
-            variant={selectedPersonality.includes(personality) ? "default" : "outline"}
+            variant={
+              selectedPersonality.includes(personality) ? "default" : "outline"
+            }
             className="cursor-pointer"
             onClick={() => onPersonalityChange(personality)}
           >
@@ -68,5 +70,5 @@ export function BreedFilter({
         ))}
       </div>
     </div>
-  )
+  );
 }
