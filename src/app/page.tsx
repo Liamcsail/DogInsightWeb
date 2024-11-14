@@ -1,9 +1,46 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { testSupabaseConnection } from "@/lib/supabaseTest";
 
 export default function Home() {
+  const [connectionStatus, setConnectionStatus] = useState<
+    "testing" | "success" | "error"
+  >("testing");
+
+  useEffect(() => {
+    async function checkConnection() {
+      const isConnected = await testSupabaseConnection();
+      setConnectionStatus(isConnected ? "success" : "error");
+    }
+
+    checkConnection();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* 添加连接状态指示器 - 仅在开发环境显示 */}
+      {process.env.NODE_ENV === "development" && (
+        <div
+          className={`p-2 text-center ${
+            connectionStatus === "success"
+              ? "bg-green-100 text-green-800"
+              : connectionStatus === "error"
+                ? "bg-red-100 text-red-800"
+                : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          Supabase 连接状态:{" "}
+          {connectionStatus === "success"
+            ? "已连接"
+            : connectionStatus === "error"
+              ? "连接失败"
+              : "正在连接..."}
+        </div>
+      )}
+
       <main className="flex-grow">
         <section className="bg-gradient-to-r from-blue-100 to-purple-100 py-20">
           <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
@@ -31,7 +68,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
@@ -56,7 +92,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         <section className="py-16 bg-gray-100">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
