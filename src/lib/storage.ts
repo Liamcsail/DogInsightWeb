@@ -1,15 +1,33 @@
-// 存储键名常量
+import { User, IdentifyRecord } from "./supabase";
+
+// Storage keys
 const STORAGE_KEYS = {
   TOKEN: "token",
   USER: "user",
   THEME: "theme",
   HISTORY: "identify_history",
+  SETTINGS: "user_settings",
+  DRAFT_POSTS: "draft_posts",
 } as const;
 
-// 本地存储工具类
+type ThemeType = "light" | "dark" | "system";
+type StorageKey = keyof typeof STORAGE_KEYS;
+
+interface UserSettings {
+  theme: ThemeType;
+  notifications: boolean;
+  language: string;
+}
+
+interface DraftPost {
+  id: string;
+  content: string;
+  images: string[];
+  lastModified: string;
+}
+
 export const storage = {
-  // 获取存储的值
-  get<T>(key: keyof typeof STORAGE_KEYS): T | null {
+  get<T>(key: StorageKey): T | null {
     try {
       const item = localStorage.getItem(STORAGE_KEYS[key]);
       return item ? JSON.parse(item) : null;
@@ -18,8 +36,7 @@ export const storage = {
     }
   },
 
-  // 设置存储的值
-  set(key: keyof typeof STORAGE_KEYS, value: any): void {
+  set(key: StorageKey, value: any): void {
     try {
       localStorage.setItem(STORAGE_KEYS[key], JSON.stringify(value));
     } catch (error) {
@@ -27,17 +44,14 @@ export const storage = {
     }
   },
 
-  // 移除存储的值
-  remove(key: keyof typeof STORAGE_KEYS): void {
+  remove(key: StorageKey): void {
     localStorage.removeItem(STORAGE_KEYS[key]);
   },
 
-  // 清除所有存储
   clear(): void {
     localStorage.clear();
   },
 
-  // 专门用于处理认证令牌的方法
   token: {
     get(): string | null {
       return storage.get("TOKEN");
@@ -50,31 +64,90 @@ export const storage = {
     },
   },
 
-  // 处理用户信息的方法
   user: {
-    get(): any | null {
+    get(): User | null {
       return storage.get("USER");
     },
-    set(user: any): void {
+    set(user: User): void {
       storage.set("USER", user);
     },
     remove(): void {
       storage.remove("USER");
     },
+    update(updates: Partial<User>): void {
+      const user = storage.user.get();
+      if (user) {
+        storage.user.set({ ...user, ...updates });
+      }
+    },
   },
 
-  // 处理识别历史记录的方法
   history: {
-    get(): any[] {
+    get(): IdentifyRecord[] {
       return storage.get("HISTORY") || [];
     },
-    add(record: any): void {
+    add(record: IdentifyRecord): void {
       const history = storage.history.get();
       history.unshift(record);
-      storage.set("HISTORY", history.slice(0, 50)); // 只保留最近50条记录
+      storage.set("HISTORY", history.slice(0, 50));
+    },
+    remove(id: string): void {
+      const history = storage.history.get();
+      storage.set(
+        "HISTORY",
+        history.filter((record) => record.id !== id),
+      );
     },
     clear(): void {
       storage.remove("HISTORY");
+    },
+  },
+
+  settings: {
+    get(): UserSettings {
+      return (
+        storage.get("SETTINGS") || {
+          theme: "system",
+          notifications: true,
+          language: "zh-CN",
+        }
+      );
+    },
+    set(settings: UserSettings): void {
+      storage.set("SETTINGS", settings);
+    },
+    update(updates: Partial<UserSettings>): void {
+      const current = storage.settings.get();
+      storage.settings.set({ ...current, ...updates });
+    },
+  },
+
+  drafts: {
+    get(): DraftPost[] {
+      return storage.get("DRAFT_POSTS") || [];
+    },
+    add(draft: Omit<DraftPost, "id">): string {
+      const drafts = storage.drafts.get();
+      const id = crypto.randomUUID();
+      const newDraft = { ...draft, id };
+      drafts.unshift(newDraft);
+      storage.set("DRAFT_POSTS", drafts);
+      return id;
+    },
+    update(id: string, updates: Partial<DraftPost>): void {
+      const drafts = storage.drafts.get();
+      const index = drafts.findIndex((d) => d.id === id);
+      if (index !== -1) {
+        drafts[index] = { ...drafts[index], ...updates };
+        storage.set("DRAFT_POSTS", drafts);
+      }
+    },
+    remove(id: string): void {
+      const drafts = storage.drafts.get();
+      storage.set(
+        "DRAFT_POSTS",
+        drafts.filter((d) => d.id !== id),
+      );
     },
   },
 };
